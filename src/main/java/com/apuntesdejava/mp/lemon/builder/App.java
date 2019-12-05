@@ -50,6 +50,7 @@ import javax.json.JsonArray;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
@@ -78,7 +79,15 @@ public class App {
                 .addOption("p", "project-name", true, "project Name")
                 .addOption("w", "web-app", true, "Web Application Name (authorization)")
                 .addOption("j", "jwt-provider", true, "JWT Provider Name (authentication)")
-                .addOption("r", "roles", true, "Roles list")
+                .addOption(
+                        Option.builder("r")
+                                .required()
+                                .desc("Roles list")
+                                .hasArg()
+                                .numberOfArgs(10)
+                                .longOpt("roles")
+                                .build()
+                )
                 .addOption("a", "real-name", true, "Realm Name")
                 .addOption("h", "header-key", true, "JWT Header Key")
                 .addOption("i", "issuer", true, "JWT Issuer")
