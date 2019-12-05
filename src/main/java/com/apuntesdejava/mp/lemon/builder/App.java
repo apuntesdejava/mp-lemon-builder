@@ -17,7 +17,12 @@ package com.apuntesdejava.mp.lemon.builder;
 
 import com.apuntesdejava.mp.lemon.builder.bean.Container;
 import com.apuntesdejava.mp.lemon.builder.bean.ProjectConfig;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Key;
@@ -36,7 +41,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.json.Json;
 import javax.json.JsonArray;
 import org.apache.commons.cli.CommandLine;
@@ -44,6 +52,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -58,7 +67,7 @@ public class App {
 
     private static final Logger LOGGER = Logger.getLogger(App.class.getName());
 
-    private static final String TEMPLATE = "e:\\proys\\jakarta\\mp-lemon-template\\";
+    private static final String TEMPLATE_URL = "https://github.com/apuntesdejava/mp-lemon-builder/blob/master/src/main/resources/mp-lemon-template.zip?raw=true";
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, ParseException {
 
@@ -110,7 +119,9 @@ public class App {
 
         String outputDir = cmd.getOptionValue('o', "output-project");
 
-        new App().execute(proj, outputDir);
+        Path template = getTemplatePath();
+
+        new App().execute(proj, outputDir, template.toString());
 
     }
 
@@ -121,6 +132,41 @@ public class App {
         });
         System.exit('1');
     }
+
+    private static Path getTemplatePath() throws MalformedURLException, IOException {
+        File tempFile = File.createTempFile("lemon", "zip");
+        tempFile.deleteOnExit();
+        FileUtils.copyURLToFile(new URL(TEMPLATE_URL), tempFile);
+
+        Path tempDir = Files.createTempDirectory("lemon");
+
+        byte[] buffer = new byte[1024];
+        try ( ZipInputStream zis = new ZipInputStream(new FileInputStream(tempFile))) {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                String entryName = zipEntry.getName();
+                LOGGER.log(Level.INFO, "->{0}", entryName);
+                if (zipEntry.isDirectory()) {
+                    Path dir = Path.of(tempDir.toString(), entryName);
+                    Files.createDirectories(dir);
+                } else {
+                    String[] fileName = entryName.split("/");
+                    Path file = Path.of(tempDir.toString(), fileName);
+                    try ( FileOutputStream fos = new FileOutputStream(file.toFile())) {
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
+                    }
+                }
+                zipEntry = zis.getNextEntry();
+            }
+            zis.closeEntry();
+        }
+        return Path.of(tempDir.toString(), "mp-lemon-template");
+
+    }
+
     private final Map<java.security.KeyRep.Type, String> keys;
 
     private App() throws NoSuchAlgorithmException {
@@ -129,7 +175,7 @@ public class App {
         this.keys = generateKeys();
     }
 
-    private void execute(ProjectConfig proj, String output) throws IOException {
+    private void execute(ProjectConfig proj, String output, String template) throws IOException {
         String jProjectName = RegExUtils.replaceAll(proj.getProjectName(), "[-]", ".");
         String jWebAppName = RegExUtils.replaceAll(proj.getWebAppName(), "[-]", ".");
         String jJwtProviderName = RegExUtils.replaceAll(proj.getJwtProviderName(), "[-]", ".");
@@ -196,7 +242,7 @@ public class App {
             webRoles.toString()
         };
 
-        Path templateList = Path.of(TEMPLATE, "list.txt");
+        Path templateList = Path.of(template, "list.txt");
         List<String> files = Files.readAllLines(templateList);
         Map<String, Path> projectStructure = new LinkedHashMap<>();
         Map<String, Path> projectStructureTemplate = new LinkedHashMap<>();
@@ -206,7 +252,7 @@ public class App {
         files.forEach(
                 (file) -> {
                     LOGGER.info(file);
-                    projectStructureTemplate.put(file, Path.of(TEMPLATE, file));
+                    projectStructureTemplate.put(file, Path.of(template, file));
                     projectStructure.put(file, Path.of(projectDir.toString(), file));
                 }
         );
