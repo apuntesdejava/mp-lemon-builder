@@ -39,8 +39,11 @@ public class ParamUtil {
         StringBuilder sb = new StringBuilder();
         options.values().forEach((opt) -> {
             sb.append('\t').append(opt.getParam()).append('\t')
-                    .append(opt.getDescription())
-                    .append('\n');
+                    .append(opt.getDescription());
+            if (StringUtils.isNotBlank(opt.getDefaultValue())) {
+                sb.append(" (Default value:").append(opt.getDefaultValue()).append(')');
+            }
+            sb.append('\n');
         });
         return sb.toString();
     }
@@ -51,7 +54,6 @@ public class ParamUtil {
     }
 
     public <T> T evaluate(Class<T> clazz, String[] args) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        T bean = ConstructorUtils.invokeConstructor(clazz);
 
         Map<String, String> values = new LinkedHashMap<>();
         for (String arg : args) {
@@ -61,9 +63,9 @@ public class ParamUtil {
         }
         if (values.containsKey("--help")) {
             System.out.println(getHelp());
-            System.exit(1);
+            return null;
         }
-
+        T bean = ConstructorUtils.invokeConstructor(clazz);
         options.entrySet().forEach((e) -> {
             try {
                 String key = e.getKey();

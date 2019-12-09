@@ -70,22 +70,24 @@ public class App {
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         ParamUtil paramUtil = new ParamUtil()
                 .addOption(new ParamOption("groupId", "--group-id", "apuntesdejava.com", "Grupo del proyecto"))
-                .addOption(new ParamOption("projectName", "--project-name", "example-project"))
+                .addOption(new ParamOption("projectName", "--project-name", "example-project", "Nombre del proyecto "))
                 .addOption(new ParamOption("version", "--version", "1.0.0-SNAPSHOT", "Nombre del proyecto"))
-                .addOption(new ParamOption("webAppName", "--web-app", "webapp", "Aplicación base que estará asegurada "))
-                .addOption(new ParamOption("jwtProviderName", "--jwt-provider", "Aplicación web que generara token"))
-                .addOption(new ParamOption("realmName", "--realm-name", "Realm configurado en el contenedor"))
-                .addOption(new ParamOption("headerKey", "--header-key", "Clave de la cabecera del token"))
-                .addOption(new ParamOption("issuer", "--issuer", "Issuer del JWT"))
+                .addOption(new ParamOption("webAppName", "--web-app", "webapp-example", "Aplicación base que estará asegurada "))
+                .addOption(new ParamOption("jwtProviderName", "--jwt-provider", "jwt-provider-example", "Aplicación web que generara token"))
+                .addOption(new ParamOption("realmName", "--realm-name", "realm-example", "Realm configurado en el contenedor"))
+                .addOption(new ParamOption("headerKey", "--header-key", "header-key-example", "Clave de la cabecera del token"))
+                .addOption(new ParamOption("issuer", "--issuer", "http://example.com", "Issuer del JWT"))
                 .addOption(new ParamOption("validToken", "--expires", "100000", "Tiempo de expiración", (Function<String, Long>) (String t) -> NumberUtils.toLong(t)))
                 .addOption(new ParamOption("roles", "--roles", "admin,user", "Lista de roles a considerar", (Function<String, Set<String>>) (String t) -> new LinkedHashSet<>(Arrays.asList(StringUtils.split(t, ",")))))
                 .addOption(new ParamOption("outputDir", "--output-project", "output-project", "Ubicación de la ruta a generar el proyecto"));
         ProjectConfig proj = paramUtil.evaluate(ProjectConfig.class, args);
-        String outputDir = proj.getOutputDir();
+        if (proj != null) {
+            String outputDir = proj.getOutputDir();
 
-        Path template = getTemplatePath();
+            Path template = getTemplatePath();
 
-        new App().execute(proj, outputDir, template.toString());
+            new App().execute(proj, outputDir, template.toString());
+        }
 
     }
 
