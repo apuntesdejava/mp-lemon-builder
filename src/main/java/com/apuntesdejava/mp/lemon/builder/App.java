@@ -15,12 +15,14 @@
  */
 package com.apuntesdejava.mp.lemon.builder;
 
-import com.apuntesdejava.mp.lemon.builder.bean.Container;
 import com.apuntesdejava.mp.lemon.builder.bean.ProjectConfig;
+import com.apuntesdejava.mp.lemon.builder.util.ParamOption;
+import com.apuntesdejava.mp.lemon.builder.util.ParamUtil;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -41,20 +43,15 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.json.Json;
 import javax.json.JsonArray;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -70,76 +67,26 @@ public class App {
 
     private static final String TEMPLATE_URL = "https://github.com/apuntesdejava/mp-lemon-builder/blob/master/src/main/resources/mp-lemon-template.zip?raw=true";
 
-    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, ParseException {
-
-        Options options = new Options();
-        options.addOption("h", "help", false, "Shows help")
-                .addOption("g", "group-id", true, "project groupId")
-                .addOption("v", "version", true, "project version")
-                .addOption("p", "project-name", true, "project Name")
-                .addOption("w", "web-app", true, "Web Application Name (authorization)")
-                .addOption("j", "jwt-provider", true, "JWT Provider Name (authentication)")
-                .addOption(
-                        Option.builder("r")
-                                .required()
-                                .desc("Roles list")
-                                .hasArg()
-                                .numberOfArgs(10)
-                                .longOpt("roles")
-                                .build()
-                )
-                .addOption("a", "real-name", true, "Realm Name")
-                .addOption("h", "header-key", true, "JWT Header Key")
-                .addOption("i", "issuer", true, "JWT Issuer")
-                .addOption("t", "expires-token", true, "Milliseconds validate token")
-                .addOption("o", "output-dir", true, "Path output project generate");
-
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = parser.parse(options, args);
-
-        if (cmd.hasOption('h') || cmd.getArgList().isEmpty()) {
-            showHelp(options);
-        }
-
-        String groupId = cmd.getOptionValue('g', "com.apuntesdejava");
-        String version = cmd.getOptionValue('v', "1.0-SNAPSHOT");
-        String projectName = cmd.getOptionValue('p', "example-project");
-        String webAppName = cmd.getOptionValue('w', "web-app");
-        String jwtProviderName = cmd.getOptionValue('j', "jwt-provider");
-
-        String[] roles = ObjectUtils.defaultIfNull(cmd.getOptionValues('r'), new String[]{"web", "admin"});
-
-        String realmName = cmd.getOptionValue('a', "auth-file");
-
-        ProjectConfig proj = new ProjectConfig();
-        proj.setGroupId(groupId);
-        proj.setVersion(version);
-        proj.setProjectName(projectName);
-        proj.setWebAppName(webAppName);
-        proj.setJwtProviderName(jwtProviderName);
-        proj.setRoles(new LinkedHashSet<>(Arrays.asList(roles)));
-        proj.setContainer(Container.PAYARA);
-        proj.setRealmName(realmName);
-        ProjectConfig.JWTConfig jwtConfig = new ProjectConfig.JWTConfig();
-        jwtConfig.setHeaderKey(cmd.getOptionValue('h', "my-header-key"));
-        jwtConfig.setIssuer(cmd.getOptionValue('i', "my-issuer"));
-        jwtConfig.setValidToken(NumberUtils.toLong(cmd.getOptionValue('t'), 10000000L));
-        proj.setJwtConfig(jwtConfig);
-
-        String outputDir = cmd.getOptionValue('o', "output-project");
+    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        ParamUtil paramUtil = new ParamUtil()
+                .addOption(new ParamOption("groupId", "--group-id", "apuntesdejava.com", "Grupo del proyecto"))
+                .addOption(new ParamOption("projectName", "--project-name", "example-project"))
+                .addOption(new ParamOption("version", "--version", "1.0.0-SNAPSHOT", "Nombre del proyecto"))
+                .addOption(new ParamOption("webAppName", "--web-app", "webapp", "Aplicación base que estará asegurada "))
+                .addOption(new ParamOption("jwtProviderName", "--jwt-provider", "Aplicación web que generara token"))
+                .addOption(new ParamOption("realmName", "--realm-name", "Realm configurado en el contenedor"))
+                .addOption(new ParamOption("headerKey", "--header-key", "Clave de la cabecera del token"))
+                .addOption(new ParamOption("issuer", "--issuer", "Issuer del JWT"))
+                .addOption(new ParamOption("validToken", "--expires", "100000", "Tiempo de expiración", (Function<String, Long>) (String t) -> NumberUtils.toLong(t)))
+                .addOption(new ParamOption("roles", "--roles", "admin,user", "Lista de roles a considerar", (Function<String, Set<String>>) (String t) -> new LinkedHashSet<>(Arrays.asList(StringUtils.split(t, ",")))))
+                .addOption(new ParamOption("outputDir", "--output-project", "output-project", "Ubicación de la ruta a generar el proyecto"));
+        ProjectConfig proj = paramUtil.evaluate(ProjectConfig.class, args);
+        String outputDir = proj.getOutputDir();
 
         Path template = getTemplatePath();
 
         new App().execute(proj, outputDir, template.toString());
 
-    }
-
-    private static void showHelp(Options options) {
-        System.out.println("Estos son los argumentos:");
-        options.getOptions().forEach((opt) -> {
-            System.out.println("\t" + opt.getOpt() + "\t" + opt.getDescription());
-        });
-        System.exit('1');
     }
 
     private static Path getTemplatePath() throws MalformedURLException, IOException {
@@ -241,9 +188,9 @@ public class App {
             xmlModules.toString(),
             rolesSB.toString(),
             rolesJson.toString(),
-            String.valueOf(proj.getJwtConfig().getValidToken()),
-            proj.getJwtConfig().getIssuer(),
-            proj.getJwtConfig().getHeaderKey(),
+            String.valueOf(proj.getValidToken()),
+            proj.getIssuer(),
+            proj.getHeaderKey(),
             keys.get(PUBLIC),
             keys.get(PRIVATE),
             payaraRoles.toString(),

@@ -31,7 +31,12 @@ public class ProjectConfig {
     private Container container;
     private String jwtProviderName;
     private String webAppName;
-    private JWTConfig jwtConfig;
+    private String issuer;
+    private String headerKey;
+    private String publicKey;
+    private String privateKey;
+    private long validToken;
+    private String outputDir;
 
     public String getGroupId() {
         return groupId;
@@ -97,62 +102,52 @@ public class ProjectConfig {
         this.realmName = realmName;
     }
 
-    public JWTConfig getJwtConfig() {
-        return jwtConfig;
+    public String getIssuer() {
+        return issuer;
     }
 
-    public void setJwtConfig(JWTConfig jwtConfig) {
-        this.jwtConfig = jwtConfig;
+    public void setIssuer(String issuer) {
+        this.issuer = issuer;
     }
 
-    public static  class JWTConfig {
-
-        private String issuer;
-        private String headerKey;
-        private String publicKey;
-        private String privateKey;
-        private long validToken;
-
-        public String getIssuer() {
-            return issuer;
-        }
-
-        public void setIssuer(String issuer) {
-            this.issuer = issuer;
-        }
-
-        public String getHeaderKey() {
-            return headerKey;
-        }
-
-        public void setHeaderKey(String headerKey) {
-            this.headerKey = headerKey;
-        }
-
-        public String getPublicKey() {
-            return publicKey;
-        }
-
-        public void setPublicKey(String publicKey) {
-            this.publicKey = publicKey;
-        }
-
-        public String getPrivateKey() {
-            return privateKey;
-        }
-
-        public void setPrivateKey(String privateKey) {
-            this.privateKey = privateKey;
-        }
-
-        public long getValidToken() {
-            return validToken;
-        }
-
-        public void setValidToken(long validToken) {
-            this.validToken = validToken;
-        }
-        
-        
+    public String getHeaderKey() {
+        return headerKey;
     }
+
+    public void setHeaderKey(String headerKey) {
+        this.headerKey = headerKey;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public long getValidToken() {
+        return validToken;
+    }
+
+    public void setValidToken(long validToken) {
+        this.validToken = validToken;
+    }
+
+    public String getOutputDir() {
+        return outputDir;
+    }
+
+    public void setOutputDir(String outputDir) {
+        this.outputDir = outputDir;
+    }
+
 }
