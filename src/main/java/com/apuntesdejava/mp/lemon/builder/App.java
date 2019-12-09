@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -73,15 +72,15 @@ public class App {
         ParamUtil paramUtil = new ParamUtil()
                 .addOption(new ParamOption("groupId", "--group-id", "apuntesdejava.com", "Grupo del proyecto"))
                 .addOption(new ParamOption("projectName", "--project-name", "example-project", "Nombre del proyecto "))
-                .addOption(new ParamOption("version", "--version", "1.0.0-SNAPSHOT", "Nombre del proyecto"))
-                .addOption(new ParamOption("webAppName", "--web-app", "webapp-example", "Aplicación base que estará asegurada "))
-                .addOption(new ParamOption("jwtProviderName", "--jwt-provider", "jwt-provider-example", "Aplicación web que generara token"))
+                .addOption(new ParamOption("version", "--version", "1.0.0-SNAPSHOT", "Versi\u00f3n del proyecto"))
+                .addOption(new ParamOption("webAppName", "--web-app", "webapp-example", "Aplicaci\u00f3n base que estará asegurada "))
+                .addOption(new ParamOption("jwtProviderName", "--jwt-provider", "jwt-provider-example", "Aplicaci\u00f3n web que generara token"))
                 .addOption(new ParamOption("realmName", "--realm-name", "realm-example", "Realm configurado en el contenedor"))
                 .addOption(new ParamOption("headerKey", "--header-key", "header-key-example", "Clave de la cabecera del token"))
                 .addOption(new ParamOption("issuer", "--issuer", "http://example.com", "Issuer del JWT"))
-                .addOption(new ParamOption("validToken", "--expires", "100000", "Tiempo de expiración", (Function<String, Long>) (String t) -> NumberUtils.toLong(t)))
+                .addOption(new ParamOption("validToken", "--expires", "100000", "Tiempo de expiraci\u00f3n", (Function<String, Long>) (String t) -> NumberUtils.toLong(t)))
                 .addOption(new ParamOption("roles", "--roles", "admin,user", "Lista de roles a considerar", (Function<String, Set<String>>) (String t) -> new LinkedHashSet<>(Arrays.asList(StringUtils.split(t, ",")))))
-                .addOption(new ParamOption("outputDir", "--output-project", "output-project", "Ubicación de la ruta a generar el proyecto"));
+                .addOption(new ParamOption("outputDir", "--output-project", "output-project", "Ubicaci\u00f3n de la ruta a generar el proyecto"));
         ProjectConfig proj = paramUtil.evaluate(ProjectConfig.class, args);
         if (proj != null) {
             String outputDir = proj.getOutputDir();
@@ -105,7 +104,7 @@ public class App {
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 String entryName = zipEntry.getName();
-                LOGGER.log(Level.INFO, "->{0}", entryName);
+                print("-> ", entryName);
                 if (zipEntry.isDirectory()) {
                     Path dir = Paths.get(tempDir.toString(), entryName);
                     Files.createDirectories(dir);
@@ -211,12 +210,12 @@ public class App {
 
         files.forEach(
                 (file) -> {
-                    LOGGER.info(file);
+                    print(file);
                     projectStructureTemplate.put(file, Paths.get(template, file));
                     projectStructure.put(file, Paths.get(projectDir.toString(), file));
                 }
         );
-        LOGGER.info("Creando estructura de directorios...");
+        print(ANSI_GREEN,"Creando estructura de directorios...");
         projectStructure.entrySet()
                 .forEach((entry) -> {
                     try {
@@ -241,7 +240,7 @@ public class App {
                         LOGGER.severe(ex.getMessage());
                     }
                 });
-        LOGGER.info("...Terminado");
+        print(ANSI_GREEN,"...Terminado");
     }
 
     private static Map<Type, String> generateKeys() throws NoSuchAlgorithmException {
@@ -269,4 +268,20 @@ public class App {
         return Base64.getEncoder().encode(content);
     }
 
+    static void print(String... msgs) {
+        System.out.print("");
+        for (String msg : msgs) {
+            System.out.print(msg);
+        }
+        System.out.println(ANSI_RESET);
+    }
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
 }
