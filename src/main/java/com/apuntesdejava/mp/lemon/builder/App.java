@@ -27,9 +27,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyRep.Type;
 import static java.security.KeyRep.Type.PRIVATE;
 import static java.security.KeyRep.Type.PUBLIC;
 import java.security.NoSuchAlgorithmException;
@@ -105,11 +107,11 @@ public class App {
                 String entryName = zipEntry.getName();
                 LOGGER.log(Level.INFO, "->{0}", entryName);
                 if (zipEntry.isDirectory()) {
-                    Path dir = Path.of(tempDir.toString(), entryName);
+                    Path dir = Paths.get(tempDir.toString(), entryName);
                     Files.createDirectories(dir);
                 } else {
                     String[] fileName = entryName.split("/");
-                    Path file = Path.of(tempDir.toString(), fileName);
+                    Path file = Paths.get(tempDir.toString(), fileName);
                     try ( FileOutputStream fos = new FileOutputStream(file.toFile())) {
                         int len;
                         while ((len = zis.read(buffer)) > 0) {
@@ -121,7 +123,7 @@ public class App {
             }
             zis.closeEntry();
         }
-        return Path.of(tempDir.toString(), "mp-lemon-template");
+        return Paths.get(tempDir.toString(), "mp-lemon-template");
 
     }
 
@@ -200,18 +202,18 @@ public class App {
             webRoles.toString()
         };
 
-        Path templateList = Path.of(template, "list.txt");
+        Path templateList = Paths.get(template, "list.txt");
         List<String> files = Files.readAllLines(templateList);
         Map<String, Path> projectStructure = new LinkedHashMap<>();
         Map<String, Path> projectStructureTemplate = new LinkedHashMap<>();
 
-        Path projectDir = Path.of(output, proj.getProjectName());
+        Path projectDir = Paths.get(output, proj.getProjectName());
 
         files.forEach(
                 (file) -> {
                     LOGGER.info(file);
-                    projectStructureTemplate.put(file, Path.of(template, file));
-                    projectStructure.put(file, Path.of(projectDir.toString(), file));
+                    projectStructureTemplate.put(file, Paths.get(template, file));
+                    projectStructure.put(file, Paths.get(projectDir.toString(), file));
                 }
         );
         LOGGER.info("Creando estructura de directorios...");
@@ -221,19 +223,19 @@ public class App {
                         String fileName = entry.getKey();
 
                         Path source = projectStructureTemplate.get(entry.getKey());
-                        String contents = Files.readString(source);
+                        String contents = new String(Files.readAllBytes(source));
                         String newContents = StringUtils.replaceEach(contents, searchList, replaceList);
                         Path targetFile = entry.getValue();
                         Path parent = targetFile.getParent();
                         if (StringUtils.endsWith(fileName, ".java")) {
                             String packageName = StringUtils.substringBetween(newContents, "package ", ";");
                             String[] packageDir = StringUtils.split(packageName, '.');
-                            parent = Path.of(targetFile.getParent().toString(), packageDir);
+                            parent = Paths.get(targetFile.getParent().toString(), packageDir);
                             String javaFileName = targetFile.getName(targetFile.getNameCount() - 1).toString();
-                            targetFile = Path.of(parent.toString(), javaFileName);
+                            targetFile = Paths.get(parent.toString(), javaFileName);
                         }
                         Files.createDirectories(parent);
-                        Files.writeString(targetFile, newContents);
+                        Files.write(targetFile, newContents.getBytes());
 
                     } catch (IOException ex) {
                         LOGGER.severe(ex.getMessage());
@@ -242,7 +244,7 @@ public class App {
         LOGGER.info("...Terminado");
     }
 
-    private static Map<java.security.KeyRep.Type, String> generateKeys() throws NoSuchAlgorithmException {
+    private static Map<Type, String> generateKeys() throws NoSuchAlgorithmException {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(2048);
         KeyPair keyPair = kpg.generateKeyPair();
@@ -253,7 +255,10 @@ public class App {
 
         byte[] privateKeyString = toByte(privateKey);
         byte[] publicKeyString = toByte(encoded.getEncoded());
-        return Map.of(PRIVATE, new String(privateKeyString), PUBLIC, new String(publicKeyString));
+        Map<Type, String> map = new LinkedHashMap<>();
+        map.put(PRIVATE, new String(privateKeyString));
+        map.put(PUBLIC, new String(publicKeyString));
+        return map;
     }
 
     static byte[] toByte(Key key) {
