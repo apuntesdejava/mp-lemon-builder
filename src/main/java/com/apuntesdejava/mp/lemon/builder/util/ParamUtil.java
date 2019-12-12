@@ -16,6 +16,7 @@
 package com.apuntesdejava.mp.lemon.builder.util;
 
 import static com.apuntesdejava.mp.lemon.builder.App.ANSI_BLUE;
+import java.io.Console;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -67,14 +68,20 @@ public class ParamUtil {
             return null;
         }
         T bean = ConstructorUtils.invokeConstructor(clazz);
+        Console con = System.console();
         options.entrySet().forEach((e) -> {
             try {
                 String key = e.getKey();
                 String value = values.get(key);
                 ParamOption opt = e.getValue();
                 String valueReturn;
-                if (value == null) {
-                    valueReturn = opt.getDefaultValue();
+                if (StringUtils.isBlank(value)) {
+                    if (con == null) {
+                        valueReturn = opt.getDefaultValue();
+                    } else {
+                        valueReturn = con.readLine(opt.getDescription() + " [" + opt.getDefaultValue() + "]: ");
+                        valueReturn = StringUtils.defaultIfBlank(valueReturn, opt.getDefaultValue());
+                    }
                 } else {
                     valueReturn = value;
                 }
@@ -89,6 +96,21 @@ public class ParamUtil {
             }
 
         });
+        System.out.println("** Valores recopilados:");
+        options.values().forEach((option) -> {
+            try {
+                Object val = PropertyUtils.getProperty(bean, option.getProperty());
+                System.out.println(option.getDescription() + ": " + val);
+            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
+        });
+        if (con != null) {
+            String opt = con.readLine("¿Son correctos estos valores? [S,N]:");
+            if (!StringUtils.equalsIgnoreCase(opt, "S")) {
+                return null;
+            }
+        }
 
         return bean;
     }

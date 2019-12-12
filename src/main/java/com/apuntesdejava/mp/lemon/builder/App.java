@@ -166,8 +166,8 @@ public class App {
             "${version}",
             "${plain.webAppName}",
             "${webAppName}",
-            "${jwtProviderName}",
             "${plain.jwtProviderName}",
+            "${jwtProviderName}",
             "${xml.modules}",
             "${roles}",
             "${json.roles}",
@@ -186,8 +186,8 @@ public class App {
             proj.getVersion(),
             proj.getWebAppName(),
             jWebAppName,
-            jJwtProviderName,
             proj.getJwtProviderName(),
+            jJwtProviderName,
             xmlModules.toString(),
             rolesSB.toString(),
             rolesJson.toString(),
@@ -215,7 +215,7 @@ public class App {
                     projectStructure.put(file, Paths.get(projectDir.toString(), file));
                 }
         );
-        print(ANSI_GREEN,"Creando estructura de directorios...");
+        print(ANSI_GREEN, "Creando estructura de directorios...");
         projectStructure.entrySet()
                 .forEach((entry) -> {
                     try {
@@ -240,7 +240,9 @@ public class App {
                         LOGGER.severe(ex.getMessage());
                     }
                 });
-        print(ANSI_GREEN,"...Terminado");
+        renameDirectory(projectDir, "jwt-provider", proj.getJwtProviderName());
+        renameDirectory(projectDir, "web-app", proj.getWebAppName());
+        print(ANSI_GREEN, "...Terminado");
     }
 
     private static Map<Type, String> generateKeys() throws NoSuchAlgorithmException {
@@ -284,4 +286,10 @@ public class App {
     public static final String ANSI_PURPLE = "\u001B[35m";
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
+
+    private void renameDirectory(Path projectDir, String actualDir, String newDir) throws IOException {
+        Path source = Paths.get(projectDir.toString(), actualDir);
+        Path target = Paths.get(projectDir.toString(), newDir);
+        Files.move(source, target);
+    }
 }
