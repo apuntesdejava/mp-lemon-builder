@@ -15,7 +15,7 @@
  */
 package com.apuntesdejava.mp.lemon.builder.util;
 
-import static com.apuntesdejava.mp.lemon.builder.App.ANSI_BLUE;
+import static com.apuntesdejava.mp.lemon.builder.util.Consola.ANSI_BLUE;
 import java.io.Console;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedHashMap;
@@ -64,7 +64,7 @@ public class ParamUtil {
             values.put(key, value);
         }
         if (values.containsKey("--help")) {
-            System.out.println(ANSI_BLUE + getHelp());
+            Consola.print(ANSI_BLUE + getHelp());
             return null;
         }
         T bean = ConstructorUtils.invokeConstructor(clazz);

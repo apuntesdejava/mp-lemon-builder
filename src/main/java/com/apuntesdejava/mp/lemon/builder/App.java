@@ -16,6 +16,9 @@
 package com.apuntesdejava.mp.lemon.builder;
 
 import com.apuntesdejava.mp.lemon.builder.bean.ProjectConfig;
+import com.apuntesdejava.mp.lemon.builder.util.Consola;
+import static com.apuntesdejava.mp.lemon.builder.util.Consola.ANSI_GREEN;
+import static com.apuntesdejava.mp.lemon.builder.util.Consola.print;
 import com.apuntesdejava.mp.lemon.builder.util.ParamOption;
 import com.apuntesdejava.mp.lemon.builder.util.ParamUtil;
 import java.io.File;
@@ -69,6 +72,7 @@ public class App {
     private static final String TEMPLATE_URL = "https://github.com/apuntesdejava/mp-lemon-builder/blob/master/src/main/resources/mp-lemon-template.zip?raw=true";
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        App app = new App();
         ParamUtil paramUtil = new ParamUtil()
                 .addOption(new ParamOption("groupId", "--group-id", "apuntesdejava.com", "Grupo del proyecto"))
                 .addOption(new ParamOption("projectName", "--project-name", "example-project", "Nombre del proyecto "))
@@ -87,7 +91,7 @@ public class App {
 
             Path template = getTemplatePath();
 
-            new App().execute(proj, outputDir, template.toString());
+            app.execute(proj, outputDir, template.toString());
         }
 
     }
@@ -129,6 +133,7 @@ public class App {
     private final Map<java.security.KeyRep.Type, String> keys;
 
     private App() throws NoSuchAlgorithmException {
+        Consola.showBanner();
         Security.addProvider(new BouncyCastleProvider());
 
         this.keys = generateKeys();
@@ -269,23 +274,6 @@ public class App {
     static byte[] toByte(byte[] content) {
         return Base64.getEncoder().encode(content);
     }
-
-    static void print(String... msgs) {
-        System.out.print("");
-        for (String msg : msgs) {
-            System.out.print(msg);
-        }
-        System.out.println(ANSI_RESET);
-    }
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_BLACK = "\u001B[30m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_BLUE = "\u001B[34m";
-    public static final String ANSI_PURPLE = "\u001B[35m";
-    public static final String ANSI_CYAN = "\u001B[36m";
-    public static final String ANSI_WHITE = "\u001B[37m";
 
     private void renameDirectory(Path projectDir, String actualDir, String newDir) throws IOException {
         Path source = Paths.get(projectDir.toString(), actualDir);
