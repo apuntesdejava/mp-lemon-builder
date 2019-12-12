@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.apuntesdejava</groupId>
     <artifactId>mp-lemon-builder</artifactId>
-    <version>0.0.1-SNAPHOT</version>
+    <version>0.0.2-SNAPHOT</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
