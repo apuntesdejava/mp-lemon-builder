@@ -19,8 +19,19 @@ Para ver la ayuda, agregar el parámetro `--help`
         --roles Lista de roles a considerar (Default value:admin,user)
         --output-project        Ubicación de la ruta a generar el proyecto (Default value:output-project)
         
+## Ejecutable
+Esta es la aplicación ejecutable desde la línea de comandos
+[mplemonbuilder.jar](mplemonbuilder.jar)
+
 ## Una breve explicación en el blog
 http://bit.ly/2rBX5Wb
 
 ## En Acción        
 https://youtu.be/AafDYt4uF0M
+
+## Registro de Cambios
+### 0.0.2:
+- Incluye un banner bonito.
+- Se crean las carpetas jwt-provider y web-app con el nombre indicado en los argumentos del programa.
+- Si hay algún parámetro que tiene valor indicado en la línea de comandos, se le pedirá via consola de manera iteractiva.
+- Antes de generar los proyectos, se muestran los valores ingresos y se pide confirmación de los valores indicados.
